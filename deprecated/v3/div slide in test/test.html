@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Slide In and Resize</title>
+</head>
+<style>
+    body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#slidingDiv {
+    width: 200px; /* Set your desired width */
+    height: 200px; /* Set your desired height */
+    background-color: blue;
+    position: absolute;
+    left: -200px; /* Start the div off-screen to the left */
+    transition: left 0.5s;
+}
+
+
+
+</style>
+<body>
+    <button id="slideButton">Slide</button>
+    <div id="slidingDiv" class="hidden"></div>
+</body>
+<script>
+    const slideButton = document.getElementById('slideButton');
+        const slidingDiv = document.getElementById('slidingDiv');
+
+        let isHidden = true;
+
+        slideButton.addEventListener('click', () => {
+            if (isHidden) {
+                slidingDiv.style.left = '0'; // Slide the div in from the left
+                isHidden = false;
+            } else {
+                slidingDiv.style.left = '-200px'; // Slide the div back off-screen to the left
+                isHidden = true;
+            }
+        });
+</script>
+</html>

@@ -1,0 +1,475 @@
+const char index_html[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waterput</title>
+    <style>
+        /* Your CSS styles here */
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+            font-family: "Sono", sans-serif;
+            font-size: 1.2rem;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+
+        body {
+            background-color: white;
+        }
+
+        h1 {
+            color: rgb(0, 0, 0);
+        }
+
+        h2 {
+            color: rgb(0, 0, 0);
+        }
+
+        nav ul {
+            padding: 10px;
+            background-color: #8ac4df;
+            list-style: none;
+            list-style-type: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav {
+            padding: 10px;
+            background-color: #8ac4df;
+        }
+
+
+        li {
+            width: clamp(8rem, 1.5vw, 12rem);
+            text-align: center;
+        }
+
+        #currentValueBox {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        #waterDrip {
+            width: clamp(1rem, 1.5vw, 20px);
+            height: clamp(1rem, 1.5vw, 20px);
+            margin-right: 0.5vw;
+            margin-top: 0.1vw;
+        }
+
+        #currentValue {
+            /* text-align: right; */
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        #settings {
+            text-align: right;
+        }
+
+        #time {
+            width: fit-content;
+            margin: 0;
+            font-weight: 500;
+            border-radius: 4px;
+            padding: 0.5vw 1vw 0.5vw 1vw;
+            background-color: #226583;
+            color: #000000;
+            /* font-size: clamp(0.5rem, 1.5vw, 1.2rem); */
+            line-height: 12px;
+        }
+
+        /* Styles for the popup container */
+        .popup-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Styles for the popup content */
+        .popup-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        /* Style for the close button */
+        .popup-close {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            /* Adjust the font size to make the button larger */
+        }
+
+        table#timeSyncTable {
+            border-collapse: collapse;
+            border: 1px solid black;
+            width: 100%;
+        }
+
+        table#timeSyncTable tr {
+            border: 1px solid black;
+        }
+
+        table#timeSyncTable td {
+            border: 1px solid black;
+            padding: 1rem;
+        }
+
+        #time {
+            color: #fff;
+        }
+
+        .popup-content h2 {
+            padding: 1.5rem 0 1rem 0;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .failed {
+            color: red;
+            display: block;
+            visibility: visible;
+        }
+
+        #time-sync-error {
+            display: none;
+            visibility: hidden;
+        }
+
+        #underconstruction {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="popupBox" class="popup-container">
+        <div class="popup-content">
+            <span class="popup-close">&times;</span>
+            <h1>Settings</h1>
+            <p>This is a simple text-based popup box!</p>
+            <h2>Sync to time esp32 <button id="syncButton">Sync</button></h2>
+            <table id="timeSyncTable">
+                <tr>
+                    <th>Device</th>
+                    <th>Time</th>
+                </tr>
+                <tr>
+                    <td>Current device</td>
+                    <td id="deviceTimeSetting">0</td>
+                </tr>
+                <tr>
+                    <td>esp32</td>
+                    <td id="esp32TimeSetting">0</td>
+                </tr>
+            </table>
+            <p id="time-sync-error"></p>
+        </div>
+    </div>
+    <nav>
+        <ul>
+            <li>
+                <p id="time">00:00</p>
+            </li>
+            <li id="currentValueBox">
+                <svg id="waterDrip" xmlns="http://www.w3.org/2000/svg" height="15" fill="#3244a8"
+                    viewBox="0 -960 960 960" width="15">
+                    <path
+                        d="M508-218q10-1 17-8.5t7-18.5q0-11-9.5-19.5T501-271q-58 8-103.5-24T343-387q-1-11-9-17.5t-17-6.5q-13 0-21 9t-6 21q11 78 74 126t144 37ZM480-60q-143 0-242.5-99.5T138-404q0-108 83-227.5T480-902q179 158 260.5 276.5T822-404q0 145-99.5 244.5T480-60Z" />
+                </svg>
+                <p id="currentValue"></p>
+
+            </li>
+            <li>
+                <p id="settings">Settings</p>
+            </li>
+        </ul>
+    </nav>
+    <!-- <p>Distance: <span id="distance">Loading...</span></p> -->
+    <h1 id="underconstruction">This site is under construction</h1>
+    <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg"
+        xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:svg="http://www.w3.org/2000/svg" id="svg2" viewBox="0 0 200 200" version="1.0">
+        <g id="layer1" transform="translate(-211.88 -270.59)">
+            <g id="g25056" stroke="#000">
+                <rect id="rect1336" stroke-linejoin="round" ry="0" rx="0"
+                    transform="matrix(.70742 -.70679 .70679 .70742 0 0)" height="138.1" width="138.09" y="413.54"
+                    x="-110.35" stroke-width="4.7022" fill="#ff0" />
+                <g id="g7457" transform="matrix(.44444 0 0 .44444 156.05 236.16)">
+                    <path id="path2224"
+                        d="m323.64 396.82h134.93c-7.12-19.07-15.71-5.79-25.34-16.79-1.74-21.77-17.36-23.06-17.36-23.06-15.94-14.23-13.36-11.28-21.06-11.39-20.5-0.28-19.88 26.8-36.72 26.19-16.8-0.57-13.1 16.51-34.45 25.05z"
+                        stroke-width="1px" fill-rule="evenodd" />
+                    <path id="path3113" d="m253.9 386l11.11-48.1 1.28-41.06" stroke-width="22" stroke-linecap="round"
+                        fill="none" />
+                    <path id="path3988" d="m291.76 386l23.06-48.1-23.06-37.29-13.38-9.39" stroke-width="22"
+                        stroke-linecap="round" fill="none" />
+                    <path id="path4875"
+                        d="m259.6 288.65l53.94-58.06s1.49-1.85 6.97-1.85l28.18 33.16-50.1 31.31-38.99-4.56z"
+                        stroke-width="1px" fill-rule="evenodd" />
+                    <path id="path5758" d="m315.25 232.51l-34.87 0.35-14.59 31.24" stroke-width="14"
+                        stroke-linecap="round" fill="none" />
+                    <path id="path6637" d="m318.31 305.45l25.26-39.55" stroke-width="14" stroke-linecap="round"
+                        fill="none" />
+                    <path id="path1334" d="m258.39 252.5l118.48 109.88v0" stroke-width="6" stroke-linecap="round"
+                        fill="none" />
+                    <path id="path3082" stroke-linejoin="round"
+                        d="m385.7 216.35a17.079 17.079 0 1 1 -34.16 0 17.079 17.079 0 1 1 34.16 0z"
+                        transform="translate(-14.517 11.671)" stroke-linecap="round" stroke-width="6" />
+                </g>
+            </g>
+        </g>
+    </svg>
+    <script>
+        let currentIndex = 0;
+        let testvalue = 110;
+        let maxWaterHoogte = 0;
+        let totaleAfstandTotBodem = 0;
+        const cycleValues = [0, 1, 2];
+
+        //time
+        const dagenVanDeWeek = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
+
+        // Settings
+        let SettingUpdateTimes = null;
+
+        const openButton = document.getElementById('settings');
+        const popupBox = document.getElementById('popupBox');
+        const closeButton = popupBox.querySelector('.popup-close');
+
+        const getDistance = async () => {
+            try {
+                const response = await fetch('/distance');
+                const data = await response.json();
+                const distanceElement = document.getElementById('distance');
+                distanceElement.innerText = data.distance + ' cm';
+                return data.distance;
+            } catch (error) {
+                console.error('Error fetching distance:', error);
+                return null; // or handle the error in an appropriate way
+            }
+        };
+
+
+        const getEsp32Time = async () => {
+            try {
+                const response = await fetch('/time');
+                const data = await response.json();
+                const r = document.getElementById("time-sync-error");
+                r.innerText = data.year + '-' + data.month + '-' + data.day + ' ' + data.dayOfWeek + ' ' + data.hour + ':' + data.minute + ':' + data.second;
+                r.className = 'failed';
+                r.style.display = 'block';
+                r.style.visibility = 'visible';
+                return parseTime(data);
+            } catch (error) {
+                console.error('Error fetching time:', error);
+                return null; // or handle the error in an appropriate way
+            }
+        };
+
+
+
+        const showCurrentValue = async () => {
+            const currentValueElement = document.getElementById('currentValue');
+            let specificValue;
+            if (cycleValues[currentIndex] == 0) {
+                let distance = maxWaterHoogte - (await getDistance()) - 100;
+                specificValue = ((maxWaterHoogte + distance) / maxWaterHoogte) * 100;
+                specificValue = specificValue.toFixed(2);
+                specificValue += '%';
+                console.log("percentage vol: " + specificValue);
+            }
+            if (cycleValues[currentIndex] == 1) {
+                specificValue = totaleAfstandTotBodem - await getDistance();
+                console.log('waterhoogte' + specificValue);
+            }
+            if (cycleValues[currentIndex] == 2) {
+                specificValue = await getDistance();
+                console.log('afstand tot water:' + specificValue);
+
+            }
+            currentValueElement.innerText = specificValue;
+        };
+
+        const cycle = () => {
+            currentIndex = (currentIndex + 1) % cycleValues.length;
+            showCurrentValue();
+        };
+
+
+
+        const getMaxWaterHoogte = async () => {
+            fetch('/maxWaterHoogte')
+                .then(response => response.json())
+                .then(data => {
+                    maxWaterHoogte = data.maxWaterHoogte;
+                })
+                .catch(error => console.error('Error fetching maxWaterHoogte:', error));
+        };
+        const getTotaleAfstandTotBodem = async () => {
+            fetch('/totaleAfstandTotBodem')
+                .then(response => response.json())
+                .then(data => {
+                    totaleAfstandTotBodem = data.totaleAfstandTotBodem;
+                })
+                .catch(error => console.error('Error fetching totaleAfstandTotBodem:', error));
+        };
+
+        // Function to show the popup
+        const showPopup = async () => {
+            document.getElementById('syncButton').addEventListener('click', syncTime);
+            const deviceTimeSetting = document.getElementById('deviceTimeSetting');
+            const esp32TimeSetting = document.getElementById('esp32TimeSetting');
+            SettingUpdateTimes = setInterval(async () => {
+
+                const DevicetimeObject = getDeviceTime();
+                deviceTimeSetting.innerText = `${DevicetimeObject.year}-${DevicetimeObject.month}-${DevicetimeObject.day} ${DevicetimeObject.dayOfWeek} ${DevicetimeObject.hour}:${DevicetimeObject.minute}:${DevicetimeObject.second}`;
+                const Esp32timeObject = await getEsp32Time();
+                esp32TimeSetting.innerText = `${Esp32timeObject.year}-${Esp32timeObject.month}-${Esp32timeObject.day} ${Esp32timeObject.dayOfWeek} ${Esp32timeObject.hour}:${Esp32timeObject.minute}:${Esp32timeObject.second}`;
+            }, 1000);
+            popupBox.style.display = 'flex';
+            setTimeout(() => {
+                popupBox.style.opacity = 1;
+            }, 10);
+        };
+
+        // Function to close the popup
+        const closePopup = () => {
+            clearInterval(SettingUpdateTimes);
+            popupBox.style.opacity = 0;
+            setTimeout(() => {
+                popupBox.style.display = 'none';
+            }, 300);
+        };
+
+
+
+        const setEventlisteners = () => {
+            document.getElementById('currentValueBox').addEventListener('click', cycle);
+            // Event listener for the open button
+            openButton.addEventListener('click', showPopup);
+
+            // Event listener for the close button
+            closeButton.addEventListener('click', closePopup);
+        };
+        const getDeviceTime = () => {
+            const time = new Date();
+            const huidigeDagVanDeWeek = time.getDay();
+            const timeObject = {
+                year: time.getFullYear(),
+                month: String(time.getMonth() + 1).padStart(2, '0'),
+                day: String(time.getDate()).padStart(2, '0'),
+                dayOfWeek: dagenVanDeWeek[huidigeDagVanDeWeek],
+                hour: String(time.getHours()).padStart(2, '0'),
+                minute: String(time.getMinutes()).padStart(2, '0'),
+                second: String(time.getSeconds()).padStart(2, '0'),
+            };
+            return timeObject;
+        };
+
+        const syncTime = async () => {
+            // Get the sync button element
+            const syncButton = document.getElementById('syncButton');
+            const postData = JSON.stringify(getDeviceTime());
+
+            fetch('/setEspTime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: postData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Request was successful (status code 2xx)
+                        console.log('Success sending post:', response.statusText);
+                        syncButton.className = 'success';
+                        syncButton.innerHTML = 'Sync &#10003;';
+                        return response.text(); // or response.json() if the server responds with JSON
+                    } else {
+                        // Request failed (status code is not 2xx)
+                        console.error('Request failed:', response.status, response.statusText);
+                        // Handle the case when the response is empty (or invalid JSON)
+                        syncButton.innerHTML = 'Sync &#10060;';
+                        const message = document.getElementById('time-sync-error');
+                        message.innerText = 'Empty or invalid response' + response.statusText;
+                        message.className = 'failed';
+                    }
+                });
+        };
+
+        const parseTime = (timeObject) => {
+
+                if (Number(timeObject.month) <= 9) {
+                    timeObject.month = '0' + String(timeObject.month);
+                }
+                if (Number(timeObject.day) <= 9) {
+                    timeObject.day = '0' + String(timeObject.day);
+                }
+                if (Number(timeObject.hour) <= 9) {
+                    timeObject.hour = '0' + String(timeObject.hour);
+                }
+                if (Number(timeObject.minute) <= 9) {
+                    timeObject.minute = '0' + String(timeObject.minute);
+                }
+                if (Number(timeObject.second) <= 9) {
+                    timeObject.second = '0' + String(timeObject.second);
+                }
+                // const errorElement = document.getElementById('errorlogging');
+                // errorElement.innerHTML = "Na het aanpassen";
+                // for (let key in data) {
+                //     if (obj.hasOwnProperty(key)) {
+                //         errorElement.innerHTML = +  `Property: ${key}, Value: ${data[key]}`;
+                //     }
+                // }
+                return timeObject;
+            };
+
+        const updateTimeOnHome = async () => {
+            const timeObject = await getEsp32Time();
+            const timeElement = document.getElementById('time');
+            timeElement.innerText = `${timeObject.hour}:${timeObject.minute}`;
+        };
+
+        const setup = async () => {
+            setEventlisteners();
+            await getMaxWaterHoogte();
+            await getTotaleAfstandTotBodem();
+        };
+
+        const loop = async () => {
+            await showCurrentValue();
+            await updateTimeOnHome();
+        };
+
+        setup();
+        const interval = setInterval(loop, 1000);
+
+    </script>
+</body>
+
+</html>
+)=====";

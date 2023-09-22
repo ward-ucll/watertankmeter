@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .progress-label::after {
+    content: "Initial Content";
+    /* other CSS properties */
+  }
+</style>
+</head>
+<body>
+
+<button onclick="changeContent()">Change Content</button>
+
+<script>
+function changeContent() {
+  const progressLabel = document.querySelector('.progress-label');
+  if (progressLabel) {
+    progressLabel.style.content = "'New Content'";
+  }
+}
+</script>
+
+</body>
+</html>

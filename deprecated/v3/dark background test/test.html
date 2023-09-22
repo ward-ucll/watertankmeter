@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mask Overlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            /* Background color of the page */
+        }
+
+        .dark-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent black overlay */
+            display: none;
+            /* Initially hidden */
+        }
+
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            /* Background color of the content */
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            /* Make sure the content is on top */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dark-mask"></div>
+    <div class="content">
+        <!-- Your content goes here -->
+        <h1>Hello, this is your content!</h1>
+    </div>
+    <script>
+        const content = document.querySelector('.content');
+        
+        // Function to show the dark mask and content
+        function showOverlay() {
+            const darkMask = document.querySelector('.dark-mask');
+            darkMask.style.display = 'block';
+            content.style.display = 'block';
+        }
+
+        // Function to hide the dark mask and content
+        function hideOverlay() {
+            darkMask.style.display = 'none';
+            content.style.display = 'none';
+        }
+
+        // Event listener to show the overlay
+        document.addEventListener('DOMContentLoaded', showOverlay);
+
+        // Event listener to hide the overlay when clicking the dark mask
+        darkMask.addEventListener('click', hideOverlay);
+    </script>
+</body>
+
+</html>

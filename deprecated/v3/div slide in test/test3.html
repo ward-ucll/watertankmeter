@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Slide In and Resize</title>
+</head>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    #container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    #slidingDiv {
+        width: 200px;
+        /* Set your desired width */
+        height: 0;
+        background-color: blue;
+        position: absolute;
+        top: 0;
+        transition: height 0.5s, top 0.5s;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style>
+
+<body>
+    <button id="slideButton">Slide</button>
+    <div id="container">
+        <div id="slidingDiv" class="hidden">
+            <p>kak</p>
+        </div>
+    </div>
+</body>
+<script>
+    const slideButton = document.getElementById('slideButton');
+    const slidingDiv = document.getElementById('slidingDiv');
+    const container = document.getElementById('container');
+
+    let isHidden = true;
+    let slideHeight = 200; // Set your desired height (numeric value)
+
+    slideButton.addEventListener('click', () => {
+        if (isHidden) {
+            slidingDiv.style.height = slideHeight + '11'; // Expand downward
+            slidingDiv.style.top = '0';
+            isHidden = false;
+        } else {
+            slidingDiv.style.height = '0'; // Collapse upward
+            slidingDiv.style.top = '0';
+            isHidden = true;
+        }
+    });
+</script>
+
+</html>

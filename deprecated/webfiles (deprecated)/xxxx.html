@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Popup Box Example</title>
+    <style>
+        /* Styles for the popup container */
+        .popup-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Styles for the popup content */
+        .popup-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        /* Style for the close button */
+        .popup-close {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            /* Adjust the font size to make the button larger */
+        }
+        table#timeSync {
+            border-collapse: collapse;
+            border: 1px solid black;
+            width: 100%;
+        }
+        table#timeSync tr {
+            border: 1px solid black;
+        }
+        table#timeSync td {
+            border: 1px solid black;
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="openButton">Show Popup</button>
+
+    <!-- Popup Box -->
+    <div id="popupBox" class="popup-container">
+        <div class="popup-content">
+            <span class="popup-close">&times;</span>
+            <h1>Settings</h1>
+            <p>This is a simple text-based popup box!</p>
+            <h2>Sync to esp32 <button>Sync</button></h2>
+            <table id="timeSync">
+                <tr>
+                    <th>Device</th>
+                    <th>Time</th>
+                </tr>
+                <tr>
+                    <td>Current device</td>
+                    <td id="deviceTimeSetting">YYYY-MM-DD DayOfWeek HH:mm:ss</td>
+                </tr>
+                <tr>
+                    <td>esp32</td>
+                    <td id="esp32TimeSetting">YYYY-MM-DD DayOfWeek HH:mm:ss</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const openButton = document.getElementById('openButton');
+        const popupBox = document.getElementById('popupBox');
+        const closeButton = popupBox.querySelector('.popup-close');
+
+        // Function to show the popup
+        const showPopup = () => {
+            popupBox.style.display = 'flex';
+            setTimeout(() => {
+                popupBox.style.opacity = 1;
+            }, 10);
+        }
+
+        // Function to close the popup
+        const closePopup = () => {
+            popupBox.style.opacity = 0;
+            setTimeout(() => {
+                popupBox.style.display = 'none';
+            }, 300);
+        }
+
+        // Event listener for the open button
+        openButton.addEventListener('click', showPopup);
+
+        // Event listener for the close button
+        closeButton.addEventListener('click', closePopup);
+    </script>
+</body>
+
+</html>

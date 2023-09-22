@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Slide In and Resize</title>
+</head>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    #slidingDiv {
+        width: 0;
+        height: 0;
+        background-color: blue;
+        position: absolute;
+        transition: width 0.5s, height 0.5s, top 0.5s, left 0.5s, right 0.5s, bottom 0.5s;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style>
+
+<body>
+    <label for="startPositionY">Start Position Y:</label>
+    <input type="number" id="startPositionY" value="0">
+    <label for="endPositionY">End Position Y:</label>
+    <input type="number" id="endPositionY" value="0">
+    <label for="blockWidth">Block Width:</label>
+    <input type="number" id="blockWidth" value="200">
+    <label for="blockHeight">Block Height:</label>
+    <input type="number" id="blockHeight" value="200">
+    <label for="direction">Slide Direction:</label>
+    <select id="direction">
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+        <option value="up">Up</option>
+        <option value="down">Down</option>
+    </select>
+    <button id="slideButton">Slide</button>
+    <div id="slidingDiv" class="hidden">
+        <p>kak</p>
+    </div>
+</body>
+<script>
+    const slideButton = document.getElementById('slideButton');
+    const slidingDiv = document.getElementById('slidingDiv');
+    const startPositionYInput = document.getElementById('startPositionY');
+    const endPositionYInput = document.getElementById('endPositionY');
+    const blockWidthInput = document.getElementById('blockWidth');
+    const blockHeightInput = document.getElementById('blockHeight');
+    // const directionSelect = document.getElementById('direction');
+
+    slideButton.addEventListener('click', () => slideSubMenu());
+
+    const slideSubMenu = () => {
+        const startPositionY = startPositionYInput.value + 'px';
+        const endPositionY = endPositionYInput.value + 'px';
+        const blockWidth = blockWidthInput.value + 'px';
+        const blockHeight = blockHeightInput.value + 'px';
+        const direction = directionSelect.value;
+
+        slidingDiv.style.top = startPositionY;
+        slidingDiv.style.width = blockWidth;
+        slidingDiv.style.height = blockHeight;
+
+        if (slidingDiv.classList.contains('hidden')) {
+            slidingDiv.classList.remove('hidden');
+            setTimeout(() => {
+                slidingDiv.style.left = '0';
+                
+                slidingDiv.style.right = '0';
+                
+                slidingDiv.style.top = '0';
+                slidingDiv.style.bottom = '0';
+                slidingDiv.style.top = endPositionY;
+
+            }, 10);
+        } else {
+            
+            // Apply the selected direction to reset
+            
+            slidingDiv.style.left = '0';
+            
+            slidingDiv.style.right = '0';
+            
+            slidingDiv.style.top = '0';
+            slidingDiv.style.bottom = '0';
+            
+            slidingDiv.style.top = startPositionY;
+
+            setTimeout(() => {
+                slidingDiv.classList.add('hidden');
+            }, 500);
+        }
+    
+    };
+</script>
+
+</html>

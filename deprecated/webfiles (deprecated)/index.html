@@ -1,0 +1,391 @@
+const char index_html[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waterput</title>
+    <style>
+        /* Your CSS styles here */
+        * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        font-family: "Sono", sans-serif;
+        font-size: 1.2rem;
+        font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+        body {
+            background-color: white;
+        }
+
+        h1 {
+            color: rgb(0, 0, 0);
+        }
+
+        h2 {
+            color: rgb(0, 0, 0);
+        }
+        nav ul {
+            padding: 10px;
+            background-color: #8ac4df;
+            list-style: none;
+            list-style-type: none;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav{
+            padding: 10px;
+            background-color: #8ac4df;
+        }
+
+        
+        li{
+            width: clamp(8rem, 1.5vw, 12rem);
+            text-align: center;
+        }
+        
+        #currentValueBox{
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        #waterDrip{
+            width: clamp(1rem, 1.5vw, 20px);
+            height: clamp(1rem, 1.5vw, 20px);
+            margin-right: 0.5vw;
+            margin-top: 0.1vw;
+        }
+        #currentValue{
+            /* text-align: right; */
+            vertical-align: middle;
+           text-align: center;
+        }
+
+        #settings{
+            text-align: right;
+        }
+        
+        #time{
+            width: fit-content;
+            margin: 0;
+            font-weight: 500;
+            border-radius: 4px;
+            padding: 0.5vw 1vw 0.5vw 1vw;
+            background-color: #226583;
+            color: #000000;
+            /* font-size: clamp(0.5rem, 1.5vw, 1.2rem); */
+            line-height: 12px;
+        }
+        /* Styles for the popup container */
+        .popup-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Styles for the popup content */
+        .popup-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        /* Style for the close button */
+        .popup-close {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            /* Adjust the font size to make the button larger */
+        }
+        table#timeSyncTable {
+            border-collapse: collapse;
+            border: 1px solid black;
+            width: 100%;
+        }
+        table#timeSyncTable tr {
+            border: 1px solid black;
+        }
+        table#timeSyncTable td {
+            border: 1px solid black;
+            padding: 1rem;
+        }
+        #time{
+            color: #fff;
+        }
+        .popup-content h2{
+            padding: 1.5rem 0 1rem 0;
+        }
+        .success{
+            color: green;
+        }
+        .failed{
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="popupBox" class="popup-container">
+        <div class="popup-content">
+            <span class="popup-close">&times;</span>
+            <h1>Settings</h1>
+            <p>This is a simple text-based popup box!</p>
+            <h2>Sync to time esp32 <button id="syncButton">Sync</button></h2>
+            <table id="timeSyncTable">
+                <tr>
+                    <th>Device</th>
+                    <th>Time</th>
+                </tr>
+                <tr>
+                    <td>Current device</td>
+                    <td id="deviceTimeSetting">0</td>
+                </tr>
+                <tr>
+                    <td>esp32</td>
+                    <td id="esp32TimeSetting">0</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <nav>
+        <ul>
+            <li>
+                <p id="time">00:00</p>
+            </li>
+            <li id="currentValueBox">
+                <svg id="waterDrip" xmlns="http://www.w3.org/2000/svg" height="15" fill="#3244a8" viewBox="0 -960 960 960" width="15">
+                    <path
+                        d="M508-218q10-1 17-8.5t7-18.5q0-11-9.5-19.5T501-271q-58 8-103.5-24T343-387q-1-11-9-17.5t-17-6.5q-13 0-21 9t-6 21q11 78 74 126t144 37ZM480-60q-143 0-242.5-99.5T138-404q0-108 83-227.5T480-902q179 158 260.5 276.5T822-404q0 145-99.5 244.5T480-60Z" />
+                </svg>
+                <p id="currentValue"></p>
+            </li>
+            <li>
+                <p id="settings">Settings</p>
+            </li>
+        </ul>
+    </nav>
+    <p>Distance: <span id="distance">Loading...</span></p>
+    <script>
+        let currentIndex = 0;
+        let testvalue = 110;
+        let maxWaterHoogte = 0;
+        let totaleAfstandTotBodem = 0;
+        const cycleValues = [0, 1, 2];
+
+        //time
+        const dagenVanDeWeek = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
+
+        // Settings
+        let SettingUpdateTimes = null;
+
+        const openButton = document.getElementById('settings');
+        const popupBox = document.getElementById('popupBox');
+        const closeButton = popupBox.querySelector('.popup-close');     
+
+        const getDistance = async () => {
+                try {
+                    const response = await fetch('/distance');
+                    const data = await response.json();
+                    const distanceElement = document.getElementById('distance');
+                    distanceElement.innerText = data.distance + ' cm';
+                    return data.distance;
+                } catch (error) {
+                    console.error('Error fetching distance:', error);
+                    return null; // or handle the error in an appropriate way
+                }
+            };
+
+            
+            const getEsp32Time = async () => {
+                fetch('/time')
+                .then(response => response.json())
+                .then(data => {
+                    const timeElement = document.getElementById('time');
+                    timeElement.innerText = data.time;
+                })
+                .catch(error => console.error('Error fetching time:', error));
+            };
+            
+            
+            
+            const showCurrentValue = async () => {
+                const currentValueElement = document.getElementById('currentValue');
+                let specificValue;
+                if (cycleValues[currentIndex] == 0) {
+                    let distance = maxWaterHoogte - (await getDistance()) - 100;
+                    specificValue = ((maxWaterHoogte + distance) / maxWaterHoogte) * 100;
+                    specificValue = specificValue.toFixed(2);
+                    specificValue += '%';
+                    console.log("percentage vol: " + specificValue)
+                }
+                if (cycleValues[currentIndex] == 1) {
+                    specificValue = totaleAfstandTotBodem - await getDistance();
+                    console.log('waterhoogte' + specificValue)
+                }
+                if (cycleValues[currentIndex] == 2) {
+                    specificValue = await getDistance();
+                    console.log('afstand tot water:' + specificValue)
+                    
+                }
+                currentValueElement.innerText = specificValue;
+            };
+            
+            const cycle = () => {
+                currentIndex = (currentIndex + 1) % cycleValues.length;
+                showCurrentValue();	
+            }
+            
+            
+            
+            const getMaxWaterHoogte = async () => {
+                fetch('/maxWaterHoogte')
+                .then(response => response.json())
+                .then(data => {
+                    maxWaterHoogte = data.maxWaterHoogte;
+                })
+                .catch(error => console.error('Error fetching maxWaterHoogte:', error));
+            }  
+            const getTotaleAfstandTotBodem = async () => {
+                fetch('/totaleAfstandTotBodem')
+                .then(response => response.json())
+                .then(data => {
+                    totaleAfstandTotBodem = data.totaleAfstandTotBodem;
+                })
+                .catch(error => console.error('Error fetching totaleAfstandTotBodem:', error));
+            }  
+            
+            // Function to show the popup
+            const showPopup = () => {
+                document.getElementById('syncButton').addEventListener('click', syncTime)
+                const deviceTimeSetting = document.getElementById('deviceTimeSetting');
+                const esp32TimeSetting = document.getElementById('esp32TimeSetting');
+                SettingUpdateTimes = setInterval(() => {
+                    const timeObject = getDeviceTime();
+                    deviceTimeSetting.innerText = `${timeObject.year}-${timeObject.month}-${timeObject.day} ${timeObject.huidigeDagNaam} ${timeObject.hours}:${timeObject.minutes}:${timeObject.seconds}`
+                    esp32TimeSetting.innerText = getEsp32Time();
+                }, 1000);
+                popupBox.style.display = 'flex';
+                setTimeout(() => {
+                    popupBox.style.opacity = 1;
+                }, 10);
+            };
+            
+            // Function to close the popup
+            const closePopup = () => {
+                clearInterval(SettingUpdateTimes);
+                popupBox.style.opacity = 0;
+                setTimeout(() => {
+                    popupBox.style.display = 'none';
+                }, 300);
+            }
+            
+            
+            
+            const setEventlisteners = () => {
+                document.getElementById('currentValueBox').addEventListener('click', cycle);
+                // Event listener for the open button
+                openButton.addEventListener('click', showPopup);
+                
+                // Event listener for the close button
+                closeButton.addEventListener('click', closePopup);
+            }
+            const getDeviceTime = () => {
+                    const time = new Date();
+                    const huidigeDagVanDeWeek = time.getDay();
+                    const timeObject = {
+                        year: time.getFullYear(),
+                        month : String(time.getMonth() + 1).padStart(2, '0'),
+                        day : String(time.getDate()).padStart(2, '0'),
+                        hours : String(time.getHours()).padStart(2, '0'),
+                        minutes : String(time.getMinutes()).padStart(2, '0'),
+                        seconds : String(time.getSeconds()).padStart(2, '0'),
+                        huidigeDagNaam : dagenVanDeWeek[huidigeDagVanDeWeek],
+                    };
+                    return timeObject;
+                } 
+            
+            const syncTime = async () => {
+                // Get the sync button element
+                const syncButton = document.getElementById('syncButton');
+                try {
+                    // Get the device time as an object
+                    const deviceTime = await getDeviceTime();
+
+                    // Send the POST request with the deviceTime object as the payload
+                    const response = await fetch("/syncTime", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(deviceTime)
+                    });
+
+                    // Wait for the response for a maximum of 2 seconds
+                    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 2000));
+
+                    // Use Promise.race to either get the response or the timeout
+                    const result = await Promise.race([response.json(), timeoutPromise]);
+
+                    if (result) {
+                        // Handle the successful response here (result contains the response data)
+                        syncButton.className = 'success';
+                        syncButton.innerHTML = 'Sync &#10003;';
+                    } else {
+                        // Handle the case when the response is empty (or invalid JSON)
+                        syncButton.className = 'failed';
+                        syncButton.innerHTML = 'Sync &#10060;';
+                        const message = document.createElement('p');
+                        message.innerText = 'Empty or invalid response';
+                        message.style.color = 'red';
+                        document.getElementById('timeSyncTable').insertAdjacentElement('afterend', message);
+                    }
+                } catch (error) {
+                    // Handle errors, like failed fetch or parsing JSON
+                    syncButton.className = 'failed';
+                    syncButton.innerHTML = 'Sync &#10060;';
+                    const message = document.createElement('p');
+                    message.innerText = error.message;
+                    message.style.color = 'red';
+                    document.getElementById('timeSyncTable').insertAdjacentElement('afterend', message);
+                    console.error('Error:', error);
+                }
+            };
+        
+        const setup = async () => {
+            setEventlisteners();
+            await getMaxWaterHoogte();
+            await getTotaleAfstandTotBodem();
+        };
+
+        const loop = async () => {
+            await showCurrentValue();
+            // await getTime();
+        };
+
+        setup();
+        const interval = setInterval(loop, 1000);
+        
+    </script>
+</body>
+</html>
+)=====";
+
