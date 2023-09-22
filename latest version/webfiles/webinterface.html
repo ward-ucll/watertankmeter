@@ -485,6 +485,10 @@ const char index_html[] PROGMEM = R"=====(
               <label for="Cyclecount">Cycle Count:</label>
               <p id="Cyclecount">loading</p>
             </div>
+            <div id="info-group">
+              <label for="Cardsize">SD card size:</label>
+              <p id="Cardsize">loading</p>
+            </div>
           </div>
         </div>
 
@@ -952,6 +956,7 @@ const char index_html[] PROGMEM = R"=====(
             data.Flashchip_size;
           document.getElementById("Cardtype").innerHTML = data.Cardtype;
           document.getElementById("Cyclecount").innerHTML = data.Cycle_count;
+          document.getElementById("Cardsize").innerHTML = data.Cardsize;
         } catch (error) {
           console.error("Error fetching info:", error);
           return null; // or handle the error in an appropriate way

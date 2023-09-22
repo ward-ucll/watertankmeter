@@ -1280,7 +1280,8 @@ DynamicJsonDocument getHardwareInfo() {
   root["Flashchip_speed"] = ESP.getFlashChipSpeed();
   root["Flashchip_size"] = ESP.getFlashChipSize();
   root["Cycle_count"] = ESP.getCycleCount();
-  
+  root["Cardsize"] = int(SD.cardSize() / (1024.0 * 1024.0));
+
   
     uint8_t cardType = SD.cardType();
 
@@ -1306,12 +1307,11 @@ DynamicJsonDocument getTaskmanager() {
 
     // Add hardware information to the JSON document
   JsonObject root = doc.to<JsonObject>();
-  root["total_ram"] = ESP.getHeapSize();
-  root["ram_available"] = ESP.getFreeHeap();
-  root["Cardsize"] = int(SD.cardSize() / (1024.0 * 1024.0));
-  root["Sketch size"] = ESP.getSketchSize();
+  root["total_ram"] = int(ESP.getHeapSize());
+  root["ram_available"] = int(ESP.getFreeHeap());
   root["TotalSpace"] = int(SD.totalBytes() / (1024.0 * 1024.0));
   root["UsedSpace"] = int(SD.usedBytes() / (1024.0 * 1024.0));
+  root["Sketch size"] = ESP.getSketchSize();
   root["Freesketch_space"] = ESP.getFreeSketchSpace();
 
   return doc;
