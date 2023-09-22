@@ -376,7 +376,7 @@ const char index_html[] PROGMEM = R"=====(
       }
 
       .progress-label::after {
-        content: "j" "%";
+        content: var(--progress-label-content, "0");
         position: absolute;
         top: 0;
         right: 0;
@@ -385,18 +385,9 @@ const char index_html[] PROGMEM = R"=====(
       .progress-element--html .progress-label::after {
         animation: progress-text-html 1s ease-in forwards;
       }
-
-      .progress-element--css .progress-label::after {
-        animation: progress-text-css 1s ease-in forwards;
-      }
-
-      .progress-element--javascript .progress-label::after {
-        animation: progress-text-javascript 1s ease-in forwards;
-      }
-
       @keyframes progress-html {
         to {
-          width: 9%;
+          width: 0%;
         }
       }
 
@@ -420,15 +411,15 @@ const char index_html[] PROGMEM = R"=====(
         font-weight: bolder;
       }
 
-        #info-group {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
-        }
+      #info-group {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
     </style>
   </head>
 
@@ -541,6 +532,10 @@ const char index_html[] PROGMEM = R"=====(
             <div id="info-group">
               <label for="Cyclecount">Cycle Count:</label>
               <p id="Cyclecount">loading</p>
+            </div>
+            <div id="info-group">
+              <label for="Cardsize">SD card size:</label>
+              <p id="Cardsize">loading</p>
             </div>
           </div>
         </div>
@@ -1009,12 +1004,28 @@ const char index_html[] PROGMEM = R"=====(
             data.Flashchip_size;
           document.getElementById("Cardtype").innerHTML = data.Cardtype;
           document.getElementById("Cyclecount").innerHTML = data.Cycle_count;
+          document.getElementById("Cardsize").innerHTML = String(data.Cardsize) + " MB";
         } catch (error) {
           console.error("Error fetching info:", error);
           return null; // or handle the error in an appropriate way
         }
       };
-      const openTaskMenu = () => {};
+      const openTaskMenu = async () => {
+        const progressLabel = document.querySelector(".progress-label");
+        intervalsFromSubmenus.taskInterval = setInterval(async () => {
+          try {
+            const response = await fetch("/taskmanager");
+            const data = await response.json();
+          } catch (error) {
+            console.error("Error fetching taskmanager:", error);
+            return null; // or handle the error in an appropriate way
+          }
+          progressLabel.style.setProperty(
+            "--progress-label-content",
+            "'New Content'"
+          );
+        }, 1000);
+      };
 
       const closeGeneralMenu = () => {
         clearInterval(intervalsFromSubmenus.General);
@@ -1047,6 +1058,7 @@ const char index_html[] PROGMEM = R"=====(
   </body>
 </html>
 )=====";
+
 
 
 // other functions
