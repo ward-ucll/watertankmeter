@@ -363,15 +363,15 @@ const char index_html[] PROGMEM = R"=====(
         font-weight: bolder;
       }
 
-        #info-group {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
-        }
+      #info-group {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
     </style>
   </head>
 
@@ -958,19 +958,20 @@ const char index_html[] PROGMEM = R"=====(
         }
       };
       const openTaskMenu = async () => {
-        const progressLabel = document.querySelector('.progress-label');
-        intervalsFromSubmenus.taskInterval = setInterval( async () => {
+        const progressLabel = document.querySelector(".progress-label");
+        intervalsFromSubmenus.taskInterval = setInterval(async () => {
           try {
-          const response = await fetch("/info");
-          const data = await response.json();
-          
+            const response = await fetch("/taskmanager");
+            const data = await response.json();
           } catch (error) {
-          console.error("Error fetching info:", error);
-          return null; // or handle the error in an appropriate way
+            console.error("Error fetching taskmanager:", error);
+            return null; // or handle the error in an appropriate way
           }
-          progressLabel.style.setProperty('--progress-label-content', "'New Content'");
-        
-          }, 1000);
+          progressLabel.style.setProperty(
+            "--progress-label-content",
+            "'New Content'"
+          );
+        }, 1000);
       };
 
       const closeGeneralMenu = () => {
