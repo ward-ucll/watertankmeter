@@ -392,11 +392,16 @@ const char index_html[] PROGMEM = R"=====(
       .progress-element--ram .progress-label::after {
         animation: progress-text-ram 1s ease-in forwards;
       }
-      
+
       .progress-element--sd .progress-label::after {
         animation: progress-text-sd 1s ease-in forwards;
       }
-      
+
+      /* @keyframes progress-ram {
+        to {
+          width: 0%;
+        }
+      } */
 
       #info-container {
         display: flex;
@@ -966,6 +971,26 @@ const char index_html[] PROGMEM = R"=====(
         });
       };
 
+      const progressBarUpdate = (id, value) => {
+        const keyframesCSS = `
+          @keyframes progress-${id} {
+            to {
+              width: ${value}%;
+            }
+          }
+          `;
+          // Create a <style> element and set its content to the keyframesCSS
+          const styleElement = document.createElement("style");
+          styleElement.textContent = keyframesCSS;
+
+          // Append the <style> element to the document's <head> to apply the animation
+          document.head.appendChild(styleElement);
+          const myElement = document.getElementById(`#${id} .progress-label`);
+          // myElement.classList.remove("animate-progress");
+          // myElement.classList.add("animate-progress");
+
+      }
+
       const slideSubMenu = (menu) => {
         const submenu = document.getElementById(menu + "Menu");
         const startPositionY = "100%";
@@ -1079,30 +1104,55 @@ const char index_html[] PROGMEM = R"=====(
             const response = await fetch("/taskmanager");
             const data = await response.json();
             const usedRam = data.totalRam - data.ramAvailable;
-            const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
+            const usedRamPercentage = ((usedRam / data.totalRam) * 100).toFixed(2);
+            progressBarUpdate("ram", usedRamPercentage);
             const message1 = `${usedRamPercentage}%`;
             progressLabel_ram.style.setProperty(
-              "--progress-label-content",
-              "'" + message1 + "'"
+            "--progress-label-content",
+            "'" + message1 + "'"
+            );
+            const usedSdPercentage = ((data.SdUsedSpace / data.SdTotalSpace) * 100).toFixed(2);
+            progressBarUpdate("sd", usedSdPercentage);
+            const message2 = `${usedSdPercentage}%`;
+            progressLabel_ram.style.setProperty(
+            "--progress-label-content",
+            "'" + message2 + "'"
             );
 
-            const newKeyframesRule = document.styleSheets[0].insertRule(`
-                @keyframes progress-ram {
-                    to {
-                        width: ${usedRamPercentage}%;
-                    }	
-                    }
-                }
-            `, 0);
-            const element = document.getElementById("ram");
-            element.style.animationName = `progress-html-${newKeyframesRule}`;
-            progressLabel_sd.style.setProperty(
-              "--progress-label-content",
-              "'old'"
-            );
             hideLoadingScreen("taskmanager-loader");
+          // Create a CSS class with the animation properties
+          // const animationClass = document.createElement("style");
+          // animationClass.textContent = `
+          //   .animate-progress {
+          //     animation-name: progress-ram;
+          //     animation-duration: 2s;
+          //     animation-timing-function: linear;
+          //     animation-fill-mode: forwards;
+          //   }
+          // `;
+
+          // // Append the CSS class to the document's <head>
+          // document.head.appendChild(animationClass);
+
+          // Add the animation class to the element (e.g., with the ID "myElement")
+
+          // const root = document.documentElement;
+
+          // // Change the value of the CSS variable
+          // root.style.setProperty('--progress-ram-contend', '90%');
+
+          // const element = document.getElementById('ram');
+
+          // // Clone the element to remove and reinsert it, retriggering the animation
+          // const cloneElement = element.cloneNode(true);
+          // element.parentNode.replaceChild(cloneElement, element);
+
+          // progressLabel_sd.style.setProperty(
+          //     "--progress-label-content",
+          //     "'old'"
+          //   );
           } catch (error) {
-            console.error("Error fetching taskmanager:", error);
+            console.log("Error fetching taskmanager:", error);
             return null; // or handle the error in an appropriate way
           }
         }, 1000);
@@ -1413,8 +1463,8 @@ DynamicJsonDocument getTaskmanager() {
   JsonObject root = doc.to<JsonObject>();
   root["totalRam"] = int(ESP.getHeapSize());
   root["ramAvailable"] = int(ESP.getFreeHeap());
-  root["TotalSpace"] = int(SD.totalBytes() / (1024.0 * 1024.0));
-  root["UsedSpace"] = int(SD.usedBytes() / (1024.0 * 1024.0));
+  root["SdTotalSpace"] = int(SD.totalBytes() / (1024.0 * 1024.0));
+  root["SdUsedSpace"] = int(SD.usedBytes() / (1024.0 * 1024.0));
   root["SketchSize"] = ESP.getSketchSize();
   root["FreesketchSpace"] = ESP.getFreeSketchSpace();
 

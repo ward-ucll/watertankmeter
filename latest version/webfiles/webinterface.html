@@ -923,6 +923,26 @@ const char index_html[] PROGMEM = R"=====(
         });
       };
 
+      const progressBarUpdate = (id, value) => {
+        const keyframesCSS = `
+          @keyframes progress-${id} {
+            to {
+              width: ${value}%;
+            }
+          }
+          `;
+          // Create a <style> element and set its content to the keyframesCSS
+          const styleElement = document.createElement("style");
+          styleElement.textContent = keyframesCSS;
+
+          // Append the <style> element to the document's <head> to apply the animation
+          document.head.appendChild(styleElement);
+          const myElement = document.getElementById(`#${id} .progress-label`);
+          // myElement.classList.remove("animate-progress");
+          // myElement.classList.add("animate-progress");
+
+      }
+
       const slideSubMenu = (menu) => {
         const submenu = document.getElementById(menu + "Menu");
         const startPositionY = "100%";
@@ -1031,53 +1051,42 @@ const char index_html[] PROGMEM = R"=====(
           "#ram .progress-label"
         );
         const progressLabel_sd = document.querySelector("#sd .progress-label");
-        let progress_ram = "0%";
-        let teller = 10;
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
-          // try {
-          //   const response = await fetch("/taskmanager");
-          //   const data = await response.json();
-          //   const usedRam = data.totalRam - data.ramAvailable;
-          //   const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
-          //   const message1 = `${usedRamPercentage}%`;
-          //   progressLabel_ram.style.setProperty(
-          //     "--progress-label-content",
-          //     "'" + message1 + "'"
-          //   );
+          try {
+            const response = await fetch("/taskmanager");
+            const data = await response.json();
+            const usedRam = data.totalRam - data.ramAvailable;
+            const usedRamPercentage = ((usedRam / data.totalRam) * 100).toFixed(2);
+            progressBarUpdate("ram", usedRamPercentage);
+            const message1 = `${usedRamPercentage}%`;
+            progressLabel_ram.style.setProperty(
+            "--progress-label-content",
+            "'" + message1 + "'"
+            );
+            const usedSdPercentage = ((data.SdUsedSpace / data.SdTotalSpace) * 100).toFixed(2);
+            progressBarUpdate("sd", usedSdPercentage);
+            const message2 = `${usedSdPercentage}%`;
+            progressLabel_ram.style.setProperty(
+            "--progress-label-content",
+            "'" + message2 + "'"
+            );
 
-          // Define the keyframes animation
-          const keyframesCSS = `
-          @keyframes progress-ram {
-            to {
-              width: ${teller}%;
-            }
-          }
-          `;
-          teller ++;
-          // Create a <style> element and set its content to the keyframesCSS
-          const styleElement = document.createElement("style");
-          styleElement.textContent = keyframesCSS;
-
-          // Append the <style> element to the document's <head> to apply the animation
-          document.head.appendChild(styleElement);
-
+            hideLoadingScreen("taskmanager-loader");
           // Create a CSS class with the animation properties
-          const animationClass = document.createElement("style");
-          animationClass.textContent = `
-            .animate-progress {
-              animation-name: progress-ram;
-              animation-duration: 2s;
-              animation-timing-function: linear;
-              animation-fill-mode: forwards;
-            }
-          `;
+          // const animationClass = document.createElement("style");
+          // animationClass.textContent = `
+          //   .animate-progress {
+          //     animation-name: progress-ram;
+          //     animation-duration: 2s;
+          //     animation-timing-function: linear;
+          //     animation-fill-mode: forwards;
+          //   }
+          // `;
 
-          // Append the CSS class to the document's <head>
-          document.head.appendChild(animationClass);
+          // // Append the CSS class to the document's <head>
+          // document.head.appendChild(animationClass);
 
           // Add the animation class to the element (e.g., with the ID "myElement")
-          const myElement = document.getElementById("#sd .progress-label");
-          myElement.classList.add("animate-progress");
 
           // const root = document.documentElement;
 
@@ -1094,10 +1103,10 @@ const char index_html[] PROGMEM = R"=====(
           //     "--progress-label-content",
           //     "'old'"
           //   );
-          // } catch (error) {
-          //   console.error("Error fetching taskmanager:", error);
-          //   return null; // or handle the error in an appropriate way
-          // }
+          } catch (error) {
+            console.log("Error fetching taskmanager:", error);
+            return null; // or handle the error in an appropriate way
+          }
         }, 1000);
       };
 

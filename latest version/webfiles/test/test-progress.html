@@ -19,6 +19,59 @@ function changeContent() {
     progressLabel.style.content = "'New Content'";
   }
 }
+
+
+
+
+
+const keyframesRam = `
+@keyframes progress-ram {
+to {
+  width: ${teller}%;
+}
+}
+`;
+teller ++;
+// Create a <style> element and set its content to the keyframesCSS
+const styleElementRam = document.createElement("ramstyle");
+styleElementRam.textContent = keyframesRam;
+document.head.appendChild(styleElementRam);
+const elementRam = document.getElementById("#ram .progress-label");
+elementRam.classList.add("animate-progress");
+
+// Append the <style> element to the document's <head> to apply the animation
+  
+  teller2 += 2;
+  const keyframesSd = `
+  @keyframes progress-sd {
+    to {
+      width: ${teller2}%;
+    }
+  }
+  `;
+  const styleElementSd = document.createElement("sdstyle");
+  styleElementSd.textContent = keyframesSd;
+  document.head.appendChild(styleElementSd);
+  const elementSd = document.getElementById("#sd .progress-label");
+  elementSd.classList.add("animate-progress");
+
+
+  const progressBarUpdate = (id, value) => {
+        // Define the keyframes animation
+          const keyframesCSS = `
+          @keyframes progress-${id}} {
+            to {
+              width: ${value}%;
+            }
+          }
+          `;
+          // Create a <style> element and set its content to the keyframesCSS
+          const styleElement = document.createElement(`style`);
+          styleElement.textContent = keyframesCSS;
+          document.head.appendChild(styleElement);
+
+      }
+
 </script>
 
 </body>
