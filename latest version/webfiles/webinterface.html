@@ -289,7 +289,7 @@ const char index_html[] PROGMEM = R"=====(
       }
 
       .progress-element {
-        width: 200px;
+        width: 100%;
         margin: 0 0 10px;
       }
 
@@ -311,12 +311,12 @@ const char index_html[] PROGMEM = R"=====(
         background: turquoise;
       }
 
-      .progress-element--html .progress-container::before {
-        animation: progress-html 1s ease-in forwards;
+      .progress-element--ram .progress-container::before {
+        animation: progress-ram 1s ease-in forwards;
       }
 
-      .progress-element--css .progress-container::before {
-        animation: progress-css 1s ease-in forwards;
+      .progress-element--sd .progress-container::before {
+        animation: progress-sd 1s ease-in forwards;
       }
 
       .progress-element--javascript .progress-container::before {
@@ -327,19 +327,34 @@ const char index_html[] PROGMEM = R"=====(
         position: relative;
       }
 
-      .progress-label::after {
-        content: var(--progress-label-content, "0");
+      #ram .progress-label::after {
+        content: var(--progress-label-content, "");
         position: absolute;
         top: 0;
         right: 0;
       }
 
-      .progress-element--html .progress-label::after {
-        animation: progress-text-html 1s ease-in forwards;
+      #sd .progress-label::after {
+        content: var(--progress-label-content, "");
+        position: absolute;
+        top: 0;
+        right: 0;
       }
-      @keyframes progress-html {
+
+      .progress-element--ram .progress-label::after {
+        animation: progress-text-ram 1s ease-in forwards;
+      }
+      @keyframes progress-ram {
         to {
-          width: 0%;
+          width: 30%;
+        }
+      }
+      .progress-element--sd .progress-label::after {
+        animation: progress-text-sd 1s ease-in forwards;
+      }
+      @keyframes progress-sd {
+        to {
+          width: 69%;
         }
       }
 
@@ -372,6 +387,44 @@ const char index_html[] PROGMEM = R"=====(
         width: 100%;
         margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
       }
+
+      /* Styles for the loading screen */
+.container {
+    position: relative; /* Position relative for proper stacking context */
+}
+
+.universal-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.universal-loading .loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Hide the loading screen when it's not needed */
+.universal-loading.hidden {
+    display: none;
+}
+
     </style>
   </head>
 
@@ -494,8 +547,18 @@ const char index_html[] PROGMEM = R"=====(
 
         <div id="taskMenu" class="hidden">
           <p id="taskClose">&#10094;</p>
-          <div class="progress-element progress-element--html">
-            <p class="progress-label">HTML</p>
+
+          <div id="loading-screen" class="universal-loading">
+            <div class="loading-spinner"></div>
+          </div>
+          <div id="ram" class="progress-element progress-element--ram">
+            <p class="progress-label">RAM:</p>
+            <div class="progress-container">
+              <progress max="100"></progress>
+            </div>
+          </div>
+          <div id="sd" class="progress-element progress-element--sd">
+            <p class="progress-label">Used SD card space:</p>
             <div class="progress-container">
               <progress max="100"></progress>
             </div>
@@ -956,26 +1019,38 @@ const char index_html[] PROGMEM = R"=====(
             data.Flashchip_size;
           document.getElementById("Cardtype").innerHTML = data.Cardtype;
           document.getElementById("Cyclecount").innerHTML = data.Cycle_count;
-          document.getElementById("Cardsize").innerHTML = String(data.Cardsize) + " MB";
+          document.getElementById("Cardsize").innerHTML =
+            String(data.Cardsize) + " MB";
         } catch (error) {
           console.error("Error fetching info:", error);
           return null; // or handle the error in an appropriate way
         }
       };
       const openTaskMenu = async () => {
-        const progressLabel = document.querySelector(".progress-label");
+        const progressLabel_ram = document.querySelector(
+          "#ram .progress-label"
+        );
+        const progressLabel_sd = document.querySelector("#sd .progress-label");
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
-          try {
-            const response = await fetch("/taskmanager");
-            const data = await response.json();
-          } catch (error) {
-            console.error("Error fetching taskmanager:", error);
-            return null; // or handle the error in an appropriate way
-          }
-          progressLabel.style.setProperty(
+          // try {
+          //   const response = await fetch("/taskmanager");
+          //   const data = await response.json();
+          // } catch (error) {
+          //   console.error("Error fetching taskmanager:", error);
+          //   return null; // or handle the error in an appropriate way
+          // }
+
+          progressLabel_ram.style.setProperty(
             "--progress-label-content",
             "'New Content'"
           );
+          progressLabel_sd.style.setProperty(
+            "--progress-label-content",
+            "'old'"
+          );
+
+          const loadingScreen = document.getElementById("loading-screen");
+          loadingScreen.classList.add("hidden");
         }, 1000);
       };
 
