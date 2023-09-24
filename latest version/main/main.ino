@@ -1079,7 +1079,7 @@ const char index_html[] PROGMEM = R"=====(
             const response = await fetch("/taskmanager");
             const data = await response.json();
             const usedRam = data.totalRam - data.ramAvailable;
-            const usedRamPercentage = (usedRam / data.totalRam) * 100;
+            const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
             const message1 = `${usedRamPercentage}%`;
             progressLabel_ram.style.setProperty(
               "--progress-label-content",
@@ -1094,6 +1094,8 @@ const char index_html[] PROGMEM = R"=====(
                     }
                 }
             `, 0);
+            const element = document.getElementById("ram");
+            element.style.animationName = `progress-html-${newKeyframesRule}`;
             progressLabel_sd.style.setProperty(
               "--progress-label-content",
               "'old'"
@@ -1570,6 +1572,14 @@ void handleMaxWaterHoogte(AsyncWebServerRequest *request)
     request->send(200, "application/json", jsonResponse);
 }
 
+void handleTaskmanager(AsyncWebServerRequest *request) {
+    String jsonResponse;
+    serializeJson(getTaskmanager(), jsonResponse);
+
+    // Send the JSON response to the client
+    request->send(200, "application/json", jsonResponse);
+}
+
 void setUpDNSServer(DNSServer &dnsServer, const IPAddress &localIP)
 {
 // Define the DNS interval in milliseconds between processing DNS requests
@@ -1671,6 +1681,8 @@ void setUpWebserver(AsyncWebServer &server, const IPAddress &localIP)
 
     server.on("/info", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleInfo(request); });
+    server.on("/taskmanager", HTTP_GET, [](AsyncWebServerRequest *request)
+              { handleTaskmanager(request); });
 
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/setEspTime", [](AsyncWebServerRequest *request, JsonVariant &json)
                                                                            {

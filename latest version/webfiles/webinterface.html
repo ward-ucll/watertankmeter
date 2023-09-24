@@ -349,6 +349,11 @@ const char index_html[] PROGMEM = R"=====(
         animation: progress-text-sd 1s ease-in forwards;
       }
       
+      @keyframes progress-ram {
+        to {
+          width: var(--progress-ram-contend, 0);
+        }
+      }
 
       #info-container {
         display: flex;
@@ -1027,34 +1032,34 @@ const char index_html[] PROGMEM = R"=====(
         );
         const progressLabel_sd = document.querySelector("#sd .progress-label");
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
-          try {
-            const response = await fetch("/taskmanager");
-            const data = await response.json();
-            const usedRam = data.totalRam - data.ramAvailable;
-            const usedRamPercentage = (usedRam / data.totalRam) * 100;
-            const message1 = `${usedRamPercentage}%`;
-            progressLabel_ram.style.setProperty(
-              "--progress-label-content",
-              "'" + message1 + "'"
-            );
+          // try {
+          //   const response = await fetch("/taskmanager");
+          //   const data = await response.json();
+          //   const usedRam = data.totalRam - data.ramAvailable;
+          //   const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
+          //   const message1 = `${usedRamPercentage}%`;
+          //   progressLabel_ram.style.setProperty(
+          //     "--progress-label-content",
+          //     "'" + message1 + "'"
+          //   );
+          const root = document.documentElement;
 
-            const newKeyframesRule = document.styleSheets[0].insertRule(`
-                @keyframes progress-ram {
-                    to {
-                        width: ${usedRamPercentage}%;
-                    }	
-                    }
-                }
-            `, 0);
-            progressLabel_sd.style.setProperty(
-              "--progress-label-content",
-              "'old'"
-            );
-            hideLoadingScreen("taskmanager-loader");
-          } catch (error) {
-            console.error("Error fetching taskmanager:", error);
-            return null; // or handle the error in an appropriate way
-          }
+          // Change the value of the CSS variable
+          root.style.setProperty('--progress-ram-contend', '90%');
+          const element = document.getElementById('ram');
+    
+          // Clone the element to remove and reinsert it, retriggering the animation
+          const cloneElement = element.cloneNode(true);
+          element.parentNode.replaceChild(cloneElement, element);
+          
+          // progressLabel_sd.style.setProperty(
+          //     "--progress-label-content",
+          //     "'old'"
+          //   );
+          // } catch (error) {
+          //   console.error("Error fetching taskmanager:", error);
+          //   return null; // or handle the error in an appropriate way
+          // }
         }, 1000);
       };
 
