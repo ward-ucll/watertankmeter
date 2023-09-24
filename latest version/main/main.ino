@@ -1104,53 +1104,22 @@ const char index_html[] PROGMEM = R"=====(
             const response = await fetch("/taskmanager");
             const data = await response.json();
             const usedRam = data.totalRam - data.ramAvailable;
-            const usedRamPercentage = ((usedRam / data.totalRam) * 100).toFixed(2);
+            const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
             progressBarUpdate("ram", usedRamPercentage);
             const message1 = `${usedRamPercentage}%`;
             progressLabel_ram.style.setProperty(
             "--progress-label-content",
             "'" + message1 + "'"
             );
-            const usedSdPercentage = ((data.SdUsedSpace / data.SdTotalSpace) * 100).toFixed(2);
+            const usedSdPercentage = parseInt((data.SdUsedSpace / data.SdTotalSpace) * 100);
             progressBarUpdate("sd", usedSdPercentage);
             const message2 = `${usedSdPercentage}%`;
             progressLabel_ram.style.setProperty(
             "--progress-label-content",
-            "'" + message2 + "'"
+            "'" + message2 + data.SdUsedSpace +  data.SdTotalSpace + "'"
             );
-
             hideLoadingScreen("taskmanager-loader");
-          // Create a CSS class with the animation properties
-          // const animationClass = document.createElement("style");
-          // animationClass.textContent = `
-          //   .animate-progress {
-          //     animation-name: progress-ram;
-          //     animation-duration: 2s;
-          //     animation-timing-function: linear;
-          //     animation-fill-mode: forwards;
-          //   }
-          // `;
-
-          // // Append the CSS class to the document's <head>
-          // document.head.appendChild(animationClass);
-
-          // Add the animation class to the element (e.g., with the ID "myElement")
-
-          // const root = document.documentElement;
-
-          // // Change the value of the CSS variable
-          // root.style.setProperty('--progress-ram-contend', '90%');
-
-          // const element = document.getElementById('ram');
-
-          // // Clone the element to remove and reinsert it, retriggering the animation
-          // const cloneElement = element.cloneNode(true);
-          // element.parentNode.replaceChild(cloneElement, element);
-
-          // progressLabel_sd.style.setProperty(
-          //     "--progress-label-content",
-          //     "'old'"
-          //   );
+            
           } catch (error) {
             console.log("Error fetching taskmanager:", error);
             return null; // or handle the error in an appropriate way
@@ -1174,7 +1143,9 @@ const char index_html[] PROGMEM = R"=====(
       };
       const closeCustomizedMenu = () => {};
       const closeInfoMenu = () => {};
-      const closeTaskMenu = () => {};
+      const closeTaskMenu = () => {
+        clearInterval(intervalsFromSubmenus.taskInterval);
+      };
 
       const updateTimeOnHome = async () => {
         const timeObject = await getEsp32Time();
@@ -1463,8 +1434,6 @@ DynamicJsonDocument getTaskmanager() {
   JsonObject root = doc.to<JsonObject>();
   root["totalRam"] = int(ESP.getHeapSize());
   root["ramAvailable"] = int(ESP.getFreeHeap());
-  root["SdTotalSpace"] = int(SD.totalBytes() / (1024.0 * 1024.0));
-  root["SdUsedSpace"] = int(SD.usedBytes() / (1024.0 * 1024.0));
   root["SketchSize"] = ESP.getSketchSize();
   root["FreesketchSpace"] = ESP.getFreeSketchSpace();
 
@@ -1625,6 +1594,9 @@ void handleMaxWaterHoogte(AsyncWebServerRequest *request)
 void handleTaskmanager(AsyncWebServerRequest *request) {
     String jsonResponse;
     serializeJson(getTaskmanager(), jsonResponse);
+
+    Serial.print("/Get");
+    Serial.println(jsonResponse);
 
     // Send the JSON response to the client
     request->send(200, "application/json", jsonResponse);
@@ -1868,5 +1840,5 @@ void loop()
 {
     dnsServer.processNextRequest(); // I call this atleast every 10ms in my other projects (can be higher but I haven't tested it for stability)
 
-    delay(100);                       // seems to help with stability, if you are doing other things in the loop this may not be needed
+    delay(500);                       // seems to help with stability, if you are doing other things in the loop this may not be needed
 }
