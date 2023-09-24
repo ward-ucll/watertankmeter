@@ -344,19 +344,11 @@ const char index_html[] PROGMEM = R"=====(
       .progress-element--ram .progress-label::after {
         animation: progress-text-ram 1s ease-in forwards;
       }
-      @keyframes progress-ram {
-        to {
-          width: 30%;
-        }
-      }
+      
       .progress-element--sd .progress-label::after {
         animation: progress-text-sd 1s ease-in forwards;
       }
-      @keyframes progress-sd {
-        to {
-          width: 69%;
-        }
-      }
+      
 
       #info-container {
         display: flex;
@@ -389,42 +381,45 @@ const char index_html[] PROGMEM = R"=====(
       }
 
       /* Styles for the loading screen */
-.container {
-    position: relative; /* Position relative for proper stacking context */
-}
+      .container {
+        position: relative; /* Position relative for proper stacking context */
+      }
 
-.universal-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
+      .universal-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
 
-.universal-loading .loading-spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-}
+      .universal-loading .loading-spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
 
-/* Hide the loading screen when it's not needed */
-.universal-loading.hidden {
-    display: none;
-}
-
+      /* Hide the loading screen when it's not needed */
+      .universal-loading.hidden {
+        display: none;
+      }
     </style>
   </head>
 
@@ -548,7 +543,7 @@ const char index_html[] PROGMEM = R"=====(
         <div id="taskMenu" class="hidden">
           <p id="taskClose">&#10094;</p>
 
-          <div id="loading-screen" class="universal-loading">
+          <div id="taskmanager-loader" class="universal-loading">
             <div class="loading-spinner"></div>
           </div>
           <div id="ram" class="progress-element progress-element--ram">
@@ -1032,26 +1027,45 @@ const char index_html[] PROGMEM = R"=====(
         );
         const progressLabel_sd = document.querySelector("#sd .progress-label");
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
-          // try {
-          //   const response = await fetch("/taskmanager");
-          //   const data = await response.json();
-          // } catch (error) {
-          //   console.error("Error fetching taskmanager:", error);
-          //   return null; // or handle the error in an appropriate way
-          // }
+          try {
+            const response = await fetch("/taskmanager");
+            const data = await response.json();
+            const usedRam = data.totalRam - data.ramAvailable;
+            const usedRamPercentage = (usedRam / data.totalRam) * 100;
+            const message1 = `${usedRamPercentage}%`;
+            progressLabel_ram.style.setProperty(
+              "--progress-label-content",
+              "'" + message1 + "'"
+            );
 
-          progressLabel_ram.style.setProperty(
-            "--progress-label-content",
-            "'New Content'"
-          );
-          progressLabel_sd.style.setProperty(
-            "--progress-label-content",
-            "'old'"
-          );
-
-          const loadingScreen = document.getElementById("loading-screen");
-          loadingScreen.classList.add("hidden");
+            const newKeyframesRule = document.styleSheets[0].insertRule(`
+                @keyframes progress-ram {
+                    to {
+                        width: ${usedRamPercentage}%;
+                    }	
+                    }
+                }
+            `, 0);
+            progressLabel_sd.style.setProperty(
+              "--progress-label-content",
+              "'old'"
+            );
+            hideLoadingScreen("taskmanager-loader");
+          } catch (error) {
+            console.error("Error fetching taskmanager:", error);
+            return null; // or handle the error in an appropriate way
+          }
         }, 1000);
+      };
+
+      const showLoadingScreen = (id) => {
+        const loadingScreen = document.getElementById(id);
+        loadingScreen.classList.remove("hidden");
+      };
+
+      const hideLoadingScreen = (id) => {
+        const loadingScreen = document.getElementById(id);
+        loadingScreen.classList.add("hidden");
       };
 
       const closeGeneralMenu = () => {
