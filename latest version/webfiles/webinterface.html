@@ -344,16 +344,16 @@ const char index_html[] PROGMEM = R"=====(
       .progress-element--ram .progress-label::after {
         animation: progress-text-ram 1s ease-in forwards;
       }
-      
+
       .progress-element--sd .progress-label::after {
         animation: progress-text-sd 1s ease-in forwards;
       }
-      
-      @keyframes progress-ram {
+
+      /* @keyframes progress-ram {
         to {
-          width: var(--progress-ram-contend, 0);
+          width: 0%;
         }
-      }
+      } */
 
       #info-container {
         display: flex;
@@ -1031,6 +1031,8 @@ const char index_html[] PROGMEM = R"=====(
           "#ram .progress-label"
         );
         const progressLabel_sd = document.querySelector("#sd .progress-label");
+        let progress_ram = "0%";
+        let teller = 10;
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
           // try {
           //   const response = await fetch("/taskmanager");
@@ -1042,16 +1044,52 @@ const char index_html[] PROGMEM = R"=====(
           //     "--progress-label-content",
           //     "'" + message1 + "'"
           //   );
-          const root = document.documentElement;
 
-          // Change the value of the CSS variable
-          root.style.setProperty('--progress-ram-contend', '90%');
-          const element = document.getElementById('ram');
-    
-          // Clone the element to remove and reinsert it, retriggering the animation
-          const cloneElement = element.cloneNode(true);
-          element.parentNode.replaceChild(cloneElement, element);
-          
+          // Define the keyframes animation
+          const keyframesCSS = `
+          @keyframes progress-ram {
+            to {
+              width: ${teller}%;
+            }
+          }
+          `;
+          teller ++;
+          // Create a <style> element and set its content to the keyframesCSS
+          const styleElement = document.createElement("style");
+          styleElement.textContent = keyframesCSS;
+
+          // Append the <style> element to the document's <head> to apply the animation
+          document.head.appendChild(styleElement);
+
+          // Create a CSS class with the animation properties
+          const animationClass = document.createElement("style");
+          animationClass.textContent = `
+            .animate-progress {
+              animation-name: progress-ram;
+              animation-duration: 2s;
+              animation-timing-function: linear;
+              animation-fill-mode: forwards;
+            }
+          `;
+
+          // Append the CSS class to the document's <head>
+          document.head.appendChild(animationClass);
+
+          // Add the animation class to the element (e.g., with the ID "myElement")
+          const myElement = document.getElementById("#sd .progress-label");
+          myElement.classList.add("animate-progress");
+
+          // const root = document.documentElement;
+
+          // // Change the value of the CSS variable
+          // root.style.setProperty('--progress-ram-contend', '90%');
+
+          // const element = document.getElementById('ram');
+
+          // // Clone the element to remove and reinsert it, retriggering the animation
+          // const cloneElement = element.cloneNode(true);
+          // element.parentNode.replaceChild(cloneElement, element);
+
           // progressLabel_sd.style.setProperty(
           //     "--progress-label-content",
           //     "'old'"
