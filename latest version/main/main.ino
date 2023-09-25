@@ -363,8 +363,8 @@ const char index_html[] PROGMEM = R"=====(
         animation: progress-ram 1s ease-in forwards;
       }
 
-      .progress-element--sd .progress-container::before {
-        animation: progress-sd 1s ease-in forwards;
+      .progress-element--skech .progress-container::before {
+        animation: progress-skech 1s ease-in forwards;
       }
 
       .progress-element--javascript .progress-container::before {
@@ -382,7 +382,7 @@ const char index_html[] PROGMEM = R"=====(
         right: 0;
       }
 
-      #sd .progress-label::after {
+      #skech .progress-label::after {
         content: var(--progress-label-content, "");
         position: absolute;
         top: 0;
@@ -393,8 +393,8 @@ const char index_html[] PROGMEM = R"=====(
         animation: progress-text-ram 1s ease-in forwards;
       }
 
-      .progress-element--sd .progress-label::after {
-        animation: progress-text-sd 1s ease-in forwards;
+      .progress-element--skech .progress-label::after {
+        animation: progress-text-skech 1s ease-in forwards;
       }
 
       /* @keyframes progress-ram {
@@ -605,8 +605,8 @@ const char index_html[] PROGMEM = R"=====(
               <progress max="100"></progress>
             </div>
           </div>
-          <div id="sd" class="progress-element progress-element--sd">
-            <p class="progress-label">Used SD card space:</p>
+          <div id="skech" class="progress-element progress-element--skech">
+            <p class="progress-label">Used skech space:</p>
             <div class="progress-container">
               <progress max="100"></progress>
             </div>
@@ -1098,7 +1098,7 @@ const char index_html[] PROGMEM = R"=====(
         const progressLabel_ram = document.querySelector(
           "#ram .progress-label"
         );
-        const progressLabel_sd = document.querySelector("#sd .progress-label");
+        const progressLabel_skech = document.querySelector("#skech .progress-label");
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
           try {
             const response = await fetch("/taskmanager");
@@ -1111,12 +1111,13 @@ const char index_html[] PROGMEM = R"=====(
             "--progress-label-content",
             "'" + message1 + "'"
             );
-            const usedSdPercentage = parseInt((data.SdUsedSpace / data.SdTotalSpace) * 100);
-            progressBarUpdate("sd", usedSdPercentage);
-            const message2 = `${usedSdPercentage}%`;
-            progressLabel_ram.style.setProperty(
+            const totalRam = data.SketchSize + data.FreesketchSpace;
+            const usedgetSketchPercentage = parseInt((data.SketchSize / totalRam) * 100);
+            progressBarUpdate("skech", usedgetSketchPercentage);
+            const message2 = `${usedgetSketchPercentage}%`;
+            progressLabel_skech.style.setProperty(
             "--progress-label-content",
-            "'" + message2 + data.SdUsedSpace +  data.SdTotalSpace + "'"
+            "'" +  message2 + data.SketchSize + data.FreesketchSpace + "'"
             );
             hideLoadingScreen("taskmanager-loader");
             
@@ -1170,6 +1171,11 @@ const char index_html[] PROGMEM = R"=====(
   </body>
 </html>
 )=====";
+
+
+
+
+
 
 
 
@@ -1434,8 +1440,8 @@ DynamicJsonDocument getTaskmanager() {
   JsonObject root = doc.to<JsonObject>();
   root["totalRam"] = int(ESP.getHeapSize());
   root["ramAvailable"] = int(ESP.getFreeHeap());
-  root["SketchSize"] = ESP.getSketchSize();
-  root["FreesketchSpace"] = ESP.getFreeSketchSpace();
+  root["SketchSize"] = ESP.getSketchSize() / 1024.0;
+  root["FreesketchSpace"] = ESP.getFreeSketchSpace() / 1024.0;
 
   return doc;
 }
