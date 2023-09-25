@@ -372,6 +372,7 @@ const char index_html[] PROGMEM = R"=====(
       }
 
       .progress-label {
+        font-weight: bolder;
         position: relative;
       }
 
@@ -380,6 +381,13 @@ const char index_html[] PROGMEM = R"=====(
         position: absolute;
         top: 0;
         right: 0;
+      }
+
+      #ram {
+        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
+      #skech {
+        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
       }
 
       #skech .progress-label::after {
@@ -413,10 +421,16 @@ const char index_html[] PROGMEM = R"=====(
         margin-top: clamp(0.5rem, 1.5vw, 0.8rem);
       }
 
-      #infoheader {
+      #subMenuHeader {
         top: clamp(0.9rem, 1.5vw, 1.2rem);
         font-size: clamp(1.5rem, 1.5vw, 1.2rem);
         position: absolute;
+      }
+
+      #subMenuHeader-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
       }
 
       #info-container label {
@@ -473,6 +487,20 @@ const char index_html[] PROGMEM = R"=====(
       .universal-loading.hidden {
         display: none;
       }
+
+      .taskmanagerValue {
+        padding: clamp(0.2rem, 1vw, 6rem), 0, clamp(0.8rem, 1vw, 1.5rem), 0;
+        list-style-type: none;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .taskmanager-container{
+        padding: clamp(1rem, 1.5vw, 2rem);
+
+      }
     </style>
   </head>
 
@@ -498,9 +526,7 @@ const char index_html[] PROGMEM = R"=====(
           maiores. Lorem ipsum dolor Lorem, ipsum dolor sit amet consectetur
           adipisicing elit. Nemo sapiente quaerat aut harum dignissimos ipsam
           provident placeat, debitis omnis magnam sint nulla, sit consectetur
-          quia. Est officiis impedit commodi perferendis! Impedit ipsa, odit iis
-          accusantium eum cupiditate dolores eos quasi fugit ullam, dolorum
-          atque. Nesciunt, temporibus. Odio dol
+          quia.
         </p>
         <div id="generalMenu" class="hidden">
           <p id="generalClose">&#10094;</p>
@@ -532,9 +558,10 @@ const char index_html[] PROGMEM = R"=====(
         </div>
         <div id="infoMenu" class="hidden">
           <p id="infoClose">&#10094;</p>
-          <!-- <div class="custom-loader"></div> -->
+          <div id="subMenuHeader-container">
+            <h1 id="subMenuHeader">Info</h1>
+          </div>
           <div id="info-container">
-            <h1 id="infoheader">Info</h1>
             <div id="info-group">
               <label for="Chipid">Chip ID:</label>
               <p id="Chipid">loading</p>
@@ -596,20 +623,33 @@ const char index_html[] PROGMEM = R"=====(
         <div id="taskMenu" class="hidden">
           <p id="taskClose">&#10094;</p>
 
+          <div id="subMenuHeader-container">
+            <h1 id="subMenuHeader">Taskmanager</h1>
+          </div>
           <div id="taskmanager-loader" class="universal-loading">
             <div class="loading-spinner"></div>
           </div>
-          <div id="ram" class="progress-element progress-element--ram">
-            <p class="progress-label">RAM:</p>
-            <div class="progress-container">
-              <progress max="100"></progress>
+          <div class="taskmanager-container">
+            <div id="ram" class="progress-element progress-element--ram">
+              <p class="progress-label">RAM:</p>
+              <div class="progress-container">
+                <progress max="100"></progress>
+              </div>
+              <ul id="ram-value" class="taskmanagerValue">
+                <li id="used">Used: 0 kB</li>
+                <li id="total">Total: 0 kB</li>
+              </ul>
             </div>
-          </div>
-          <div id="skech" class="progress-element progress-element--skech">
-            <p class="progress-label">Used skech space:</p>
-            <div class="progress-container">
-              <progress max="100"></progress>
+            <div id="skech" class="progress-element progress-element--skech">
+              <p class="progress-label">Used skech space:</p>
+              <div class="progress-container">
+                <progress max="100"></progress>
+              </div>
             </div>
+            <ul id="skech-value" class="taskmanagerValue">
+              <li id="used">Used: 0 kB</li>
+              <li id="total">Total: 0 kB</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -979,17 +1019,16 @@ const char index_html[] PROGMEM = R"=====(
             }
           }
           `;
-          // Create a <style> element and set its content to the keyframesCSS
-          const styleElement = document.createElement("style");
-          styleElement.textContent = keyframesCSS;
+        // Create a <style> element and set its content to the keyframesCSS
+        const styleElement = document.createElement("style");
+        styleElement.textContent = keyframesCSS;
 
-          // Append the <style> element to the document's <head> to apply the animation
-          document.head.appendChild(styleElement);
-          const myElement = document.getElementById(`#${id} .progress-label`);
-          // myElement.classList.remove("animate-progress");
-          // myElement.classList.add("animate-progress");
-
-      }
+        // Append the <style> element to the document's <head> to apply the animation
+        document.head.appendChild(styleElement);
+        const myElement = document.getElementById(`#${id} .progress-label`);
+        // myElement.classList.remove("animate-progress");
+        // myElement.classList.add("animate-progress");
+      };
 
       const slideSubMenu = (menu) => {
         const submenu = document.getElementById(menu + "Menu");
@@ -1098,7 +1137,9 @@ const char index_html[] PROGMEM = R"=====(
         const progressLabel_ram = document.querySelector(
           "#ram .progress-label"
         );
-        const progressLabel_skech = document.querySelector("#skech .progress-label");
+        const progressLabel_skech = document.querySelector(
+          "#skech .progress-label"
+        );
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
           try {
             const response = await fetch("/taskmanager");
@@ -1111,16 +1152,27 @@ const char index_html[] PROGMEM = R"=====(
             "--progress-label-content",
             "'" + message1 + "'"
             );
-            const totalRam = data.SketchSize + data.FreesketchSpace;
-            const usedgetSketchPercentage = parseInt((data.SketchSize / totalRam) * 100);
+            document.querySelector(
+              "#ram-value #used"
+            ).innerText = `Used: ${usedRam} kB`;
+            document.querySelector(
+              "#ram-value #total"
+            ).innerText = `Total: ${data.totalRam} kB`;
+            const totalSkechSpace = data.SketchSize + data.FreesketchSpace;
+            const usedgetSketchPercentage = parseInt((data.SketchSize / totalSkechSpace) * 100);
             progressBarUpdate("skech", usedgetSketchPercentage);
             const message2 = `${usedgetSketchPercentage}%`;
             progressLabel_skech.style.setProperty(
             "--progress-label-content",
-            "'" +  message2 + data.SketchSize + data.FreesketchSpace + "'"
+            "'" +  message2 + "'"
             );
+            document.querySelector(
+              "#skech-value #used"
+            ).innerText = `Used: ${data.SketchSize} kB`;
+            document.querySelector(
+              "#skech-value #total"
+            ).innerText = `Total: ${totalSkechSpace} kB`;
             hideLoadingScreen("taskmanager-loader");
-            
           } catch (error) {
             console.log("Error fetching taskmanager:", error);
             return null; // or handle the error in an appropriate way
@@ -1438,8 +1490,8 @@ DynamicJsonDocument getTaskmanager() {
 
     // Add hardware information to the JSON document
   JsonObject root = doc.to<JsonObject>();
-  root["totalRam"] = int(ESP.getHeapSize());
-  root["ramAvailable"] = int(ESP.getFreeHeap());
+  root["totalRam"] = ESP.getHeapSize() / 1024.0;
+  root["ramAvailable"] = ESP.getFreeHeap() / 1024.0;
   root["SketchSize"] = ESP.getSketchSize() / 1024.0;
   root["FreesketchSpace"] = ESP.getFreeSketchSpace() / 1024.0;
 
