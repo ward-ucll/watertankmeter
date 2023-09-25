@@ -1154,10 +1154,10 @@ const char index_html[] PROGMEM = R"=====(
             );
             document.querySelector(
               "#ram-value #used"
-            ).innerText = `Used: ${usedRam} kB`;
+            ).innerText = `Used: ${usedRam.toFixed(2)} kB`;
             document.querySelector(
               "#ram-value #total"
-            ).innerText = `Total: ${data.totalRam} kB`;
+            ).innerText = `Total: ${data.totalRam.toFixed(2)} kB`;
             const totalSkechSpace = data.SketchSize + data.FreesketchSpace;
             const usedgetSketchPercentage = parseInt((data.SketchSize / totalSkechSpace) * 100);
             progressBarUpdate("skech", usedgetSketchPercentage);
@@ -1168,10 +1168,10 @@ const char index_html[] PROGMEM = R"=====(
             );
             document.querySelector(
               "#skech-value #used"
-            ).innerText = `Used: ${data.SketchSize} kB`;
+            ).innerText = `Used: ${data.SketchSize.toFixed(2)} kB`;
             document.querySelector(
               "#skech-value #total"
-            ).innerText = `Total: ${totalSkechSpace} kB`;
+            ).innerText = `Total: ${totalSkechSpace.toFixed(2)} kB`;
             hideLoadingScreen("taskmanager-loader");
           } catch (error) {
             console.log("Error fetching taskmanager:", error);
@@ -1223,6 +1223,7 @@ const char index_html[] PROGMEM = R"=====(
   </body>
 </html>
 )=====";
+
 
 
 
