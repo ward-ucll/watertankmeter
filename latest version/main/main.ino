@@ -16,7 +16,7 @@ int sdCsPin = 5;
 const char *ssid = "Waterput"; // FYI The SSID can't have a space in it.
 const char *password = NULL;   // no password
 
-#define MAX_CLIENTS 4  // ESP32 supports up to 10 but I have not tested it yet
+#define MAX_CLIENTS 1  // ESP32 supports up to 10 but I have not tested it yet
 #define WIFI_CHANNEL 6 // 2.4ghz channel 6 https://en.wikipedia.org/wiki/List_of_WLAN_channels#2.4_GHz_(802.11b/g/n/ax)
 
 const IPAddress localIP(4, 3, 2, 1);          // the IP address the web server, Samsung requires the IP to be in public space
@@ -24,6 +24,7 @@ const IPAddress gatewayIP(4, 3, 2, 1);        // IP address of the network shoul
 const IPAddress subnetMask(255, 255, 255, 0); // no need to change: https://avinetworks.com/glossary/subnet-mask/
 
 const String localIPURL = "http://4.3.2.1"; // a string version of the local IP with http, used for redirecting clients to your webpage
+
 
 
 // sonar
@@ -368,7 +369,7 @@ const char index_html[] PROGMEM = R"=====(
       }
 
       .progress-element--javascript .progress-container::before {
-        animation: progress-javascript 1s ease-in forwards;
+        animation: progress-sd 1s ease-in forwards;
       }
 
       .progress-label {
@@ -383,19 +384,30 @@ const char index_html[] PROGMEM = R"=====(
         right: 0;
       }
 
-      #ram {
-        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
-      }
-      #skech {
-        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
-      }
-
       #skech .progress-label::after {
         content: var(--progress-label-content, "");
         position: absolute;
         top: 0;
         right: 0;
       }
+
+      #sd .progress-label::after {
+        content: var(--progress-label-content, "");
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+
+      #ram {
+        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
+      #sd {
+        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
+      #skech {
+        padding-top: clamp(0.5rem, 1.5vw, 0.8rem);
+      }
+
 
       .progress-element--ram .progress-label::after {
         animation: progress-text-ram 1s ease-in forwards;
@@ -404,12 +416,9 @@ const char index_html[] PROGMEM = R"=====(
       .progress-element--skech .progress-label::after {
         animation: progress-text-skech 1s ease-in forwards;
       }
-
-      /* @keyframes progress-ram {
-        to {
-          width: 0%;
-        }
-      } */
+      .progress-element--sd .progress-label::after {
+        animation: progress-text-skech 1s ease-in forwards;
+      }
 
       #info-container {
         display: flex;
@@ -635,11 +644,11 @@ const char index_html[] PROGMEM = R"=====(
               <div class="progress-container">
                 <progress max="100"></progress>
               </div>
-              <ul id="ram-value" class="taskmanagerValue">
-                <li id="used">Used: 0 kB</li>
-                <li id="total">Total: 0 kB</li>
-              </ul>
             </div>
+            <ul id="ram-value" class="taskmanagerValue">
+              <li id="used">Used: 0 kB</li>
+              <li id="total">Total: 0 kB</li>
+            </ul>
             <div id="skech" class="progress-element progress-element--skech">
               <p class="progress-label">Used skech space:</p>
               <div class="progress-container">
@@ -649,6 +658,16 @@ const char index_html[] PROGMEM = R"=====(
             <ul id="skech-value" class="taskmanagerValue">
               <li id="used">Used: 0 kB</li>
               <li id="total">Total: 0 kB</li>
+            </ul>
+            <div id="sd" class="progress-element progress-element--sd">
+              <p class="progress-label">Used SD space:</p>
+              <div class="progress-container">
+                <progress max="100"></progress>
+              </div>
+            </div>
+            <ul id="sd-value" class="taskmanagerValue">
+              <li id="used">Used: 0 MB</li>
+              <li id="total">Total: 0 MB</li>
             </ul>
           </div>
         </div>
@@ -1140,10 +1159,15 @@ const char index_html[] PROGMEM = R"=====(
         const progressLabel_skech = document.querySelector(
           "#skech .progress-label"
         );
+        const progressLabel_sd = document.querySelector(
+          "#sd .progress-label"
+        );
         intervalsFromSubmenus.taskInterval = setInterval(async () => {
           try {
             const response = await fetch("/taskmanager");
             const data = await response.json();
+
+            // ram progressbar
             const usedRam = data.totalRam - data.ramAvailable;
             const usedRamPercentage = parseInt((usedRam / data.totalRam) * 100);
             progressBarUpdate("ram", usedRamPercentage);
@@ -1158,20 +1182,38 @@ const char index_html[] PROGMEM = R"=====(
             document.querySelector(
               "#ram-value #total"
             ).innerText = `Total: ${data.totalRam.toFixed(2)} kB`;
-            const totalSkechSpace = data.SketchSize + data.FreesketchSpace;
-            const usedgetSketchPercentage = parseInt((data.SketchSize / totalSkechSpace) * 100);
-            progressBarUpdate("skech", usedgetSketchPercentage);
-            const message2 = `${usedgetSketchPercentage}%`;
+
+            // skech progressbar
+            const totalSkechSpace = data.sketchSize + data.freesketchSpace;
+            const usedSketchPercentage = parseInt((data.sketchSize / totalSkechSpace) * 100);
+            progressBarUpdate("skech", usedSketchPercentage);
+            const message2 = `${usedSketchPercentage}%`;
             progressLabel_skech.style.setProperty(
             "--progress-label-content",
             "'" +  message2 + "'"
             );
             document.querySelector(
               "#skech-value #used"
-            ).innerText = `Used: ${data.SketchSize.toFixed(2)} kB`;
+            ).innerText = `Used: ${data.sketchSize.toFixed(2)} kB`;
             document.querySelector(
               "#skech-value #total"
             ).innerText = `Total: ${totalSkechSpace.toFixed(2)} kB`;
+
+            // sd progressbar
+            const usedSdPercentage = parseInt((data.usedSdSpace / data.totalSdSpace) * 100);
+            progressBarUpdate("sd", usedSdPercentage);
+            const message3 = `${usedSdPercentage}%`;
+            progressLabel_sd.style.setProperty(
+            "--progress-label-content",
+            "'" +  message3 + "'"
+            );
+            document.querySelector(
+              "#sd-value #used"
+            ).innerText = `Used: ${data.usedSdSpace.toFixed(2)} MB`;
+            document.querySelector(
+              "#sd-value #total"
+            ).innerText = `Total: ${data.totalSdSpace.toFixed(2)} MB`;
+
             hideLoadingScreen("taskmanager-loader");
           } catch (error) {
             console.log("Error fetching taskmanager:", error);
@@ -1233,6 +1275,7 @@ const char index_html[] PROGMEM = R"=====(
 
 
 
+
 // other functions
 //      sd card
 std::vector<String> listDir(fs::FS &fs, String dirname, uint8_t levels){
@@ -1248,8 +1291,7 @@ std::vector<String> listDir(fs::FS &fs, String dirname, uint8_t levels){
     Serial.println("Not a directory");
     return dirList;
   }
-
-
+  
   File file = root.openNextFile();
   while(file){
     if(file.isDirectory()){
@@ -1447,6 +1489,13 @@ void makeSettingsfileIfNotFound() {
   createFileIfnotFound("Settings.json", "/Settings");
 }
 
+void printDirList(const std::vector<String>& dirList) {
+    for (const String& item : dirList) {
+        Serial.print("Item: ");
+        Serial.println(item);
+    }
+}
+
 DynamicJsonDocument getHardwareInfo() {
   // Create a JSON document with enough capacity
   DynamicJsonDocument doc(512);
@@ -1485,25 +1534,82 @@ DynamicJsonDocument getHardwareInfo() {
   return root;
 }
 
-DynamicJsonDocument getTaskmanager() {
+// void getUsedSdSpace(fs::FS &fs, String dirname, long int totalSize){
+//   Serial.printf("Listing directory: %s\n", dirname);
+//   SD.begin(5);
 
-  DynamicJsonDocument doc(512);
+//   File root = fs.open(dirname);
+//   if(!root){
+//     Serial.println("Failed to open directory");
+//     return ;
+//   }
+//   if(!root.isDirectory()){
+//     Serial.println("Not a directory");
+//     return ;
+//   }
+  
+//   File file = root.openNextFile();
+//   while(file){
+//     if(file.isDirectory()){
+//       Serial.print("  DIR : ");
+//       Serial.println(file.name());
+//       listDir(fs, file.name(), totalSize);
+      
+//     } else {
+//       Serial.print("  FILE: ");
+//       Serial.print(file.name());
+//       Serial.print("  SIZE: ");
+//       Serial.println(file.size());
+//       totalSize = totalSize + int(file.size());
 
-    // Add hardware information to the JSON document
-  JsonObject root = doc.to<JsonObject>();
-  root["totalRam"] = ESP.getHeapSize() / 1024.0;
-  root["ramAvailable"] = ESP.getFreeHeap() / 1024.0;
-  root["SketchSize"] = ESP.getSketchSize() / 1024.0;
-  root["FreesketchSpace"] = ESP.getFreeSketchSpace() / 1024.0;
+//     }
+//     file = root.openNextFile();
+//   }
+// }
 
-  return doc;
-}
+int getUsedSdSpace(fs::FS &fs, String dirname, uint8_t levels)
+{
+  int usedSpace;
+  std::vector<String> dirList;
+  Serial.printf("Listing directory: %s\n", dirname);
 
-void printDirList(const std::vector<String>& dirList) {
-    for (const String& item : dirList) {
-        Serial.print("Item: ");
-        Serial.println(item);
+  File root = fs.open(dirname);
+  if (!root)
+  {
+    Serial.println("Failed to open directory");
+    return 0;
+  }
+  if (!root.isDirectory())
+  {
+    Serial.println("Not a directory");
+    return 0;
+  }
+
+  File file = root.openNextFile();
+  while (file)
+  {
+    if (file.isDirectory())
+    {
+      Serial.print("  DIR : ");
+      Serial.println(file.name());
+      dirList.push_back("<D>" + String(file.name()));
+      if (levels)
+      {
+        listDir(fs, file.name(), levels - 1);
+      }
     }
+    else
+    {
+      Serial.print("  FILE: ");
+      Serial.print(file.name());
+      Serial.print("  SIZE: ");
+      Serial.println(file.size());
+      usedSpace = usedSpace + int(file.size());
+      dirList.push_back(String(file.name()));
+    }
+    file = root.openNextFile();
+  }
+  return usedSpace;
 }
 
 String getSdStatusAndmount() {
@@ -1519,16 +1625,6 @@ String getSdStatusAndmount() {
 
   return "Card mounted successfully";
 } 
-
-// DynamicJsonDocument getSdCardInfo() {
-//   // Create a JSON object
-//   DynamicJsonDocument jsonDoc(200); // Adjust the size as needed
-
-//   // Add data to the JSON object
-  
-
-//   return jsonDoc;
-// }
 
 //      rtc clok module
 Ds1302::DOW convertToDs1302Dow(int dayNumber)
@@ -1650,6 +1746,26 @@ void handleMaxWaterHoogte(AsyncWebServerRequest *request)
     request->send(200, "application/json", jsonResponse);
 }
 
+DynamicJsonDocument getTaskmanager() {
+
+  DynamicJsonDocument doc(512);
+
+    // Add hardware information to the JSON document
+  JsonObject root = doc.to<JsonObject>();
+  
+  root["totalRam"] = ESP.getHeapSize() / 1024.0;
+  root["ramAvailable"] = ESP.getFreeHeap() / 1024.0;
+  root["sketchSize"] = ESP.getSketchSize() / 1024.0;
+  root["freesketchSpace"] = ESP.getFreeSketchSpace() / 1024.0;
+  root["totalSdSpace"] = SD.cardSize() / (1024.0 * 1024.0);
+  root["usedSdSpace"] = 0;
+  int used = getUsedSdSpace(SD, "/", 0);
+  listDir(SD, "/", 0);
+  Serial.println(used);
+  return doc;
+}
+
+
 void handleTaskmanager(AsyncWebServerRequest *request) {
     String jsonResponse;
     serializeJson(getTaskmanager(), jsonResponse);
@@ -1674,7 +1790,7 @@ void setUpDNSServer(DNSServer &dnsServer, const IPAddress &localIP)
 void startSoftAccessPoint(const char *ssid, const char *password, const IPAddress &localIP, const IPAddress &gatewayIP)
 {
 // Define the maximum number of clients that can connect to the server
-#define MAX_CLIENTS 4
+#define MAX_CLIENTS 1
 // Define the WiFi channel to be used (channel 6 in this case)
 #define WIFI_CHANNEL 6
 
@@ -1838,8 +1954,8 @@ void setup()
     //SD
     if (!SD.begin(5)) {
     Serial.println("SD card initialization failed.");
-    return;
     }
+    
     // Serial.println(getSdStatusAndmount());
 
 
@@ -1871,9 +1987,27 @@ void setup()
     Serial.println("\n\nCaptive Test, V0.5.0 compiled " __DATE__ " " __TIME__ " by CD_FER"); //__DATE__ is provided by the platformio ide
     Serial.printf("%s-%d\n\r", ESP.getChipModel(), ESP.getChipRevision());
 
-    
 
     startSoftAccessPoint(ssid, password, localIP, gatewayIP);
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    printDirList(listDir(SD, "/", 0));
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
+    Serial.print("\n");
 
     setUpDNSServer(dnsServer, localIP);
 
@@ -1894,10 +2028,8 @@ void setup()
 }
 
 
-
 void loop()
 {
     dnsServer.processNextRequest(); // I call this atleast every 10ms in my other projects (can be higher but I haven't tested it for stability)
-
     delay(500);                       // seems to help with stability, if you are doing other things in the loop this may not be needed
 }
